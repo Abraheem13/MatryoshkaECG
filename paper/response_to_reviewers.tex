@@ -1,0 +1,346 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+
+\definecolor{revblue}{RGB}{20,60,120}
+\newcommand{\comment}[1]{\par\medskip\noindent\textcolor{revblue}{\textbf{Comment.} \textit{#1}}\par\smallskip}
+\newcommand{\response}{\par\noindent\textbf{Response.}\ }
+\newcommand{\changed}[1]{\par\smallskip\noindent\textbf{Changes:} #1\par}
+\newcommand{\TBD}{\textcolor{red}{\textbf{[TBD]}}}
+\newcommand{\etal}{\textit{et al.}}
+
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+
+\title{\vspace{-2em}Response to Reviewers\\[0.3em]
+\large Manuscript: \textit{Matryoshka Representation Learning for
+Adaptive-Fidelity ECG Classification}\\
+\normalsize IEEE Journal of Biomedical and Health Informatics}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-3em}
+
+\section*{Summary of changes}
+
+We thank both reviewers for reviews that identified real weaknesses rather
+than cosmetic ones. Two criticisms in particular changed how we understand our
+own result, and we have restructured the paper accordingly rather than
+patching around them.
+
+\begin{enumerate}[leftmargin=*,itemsep=3pt]
+\item \textbf{The wearable-to-cloud framing was not supported and has been
+withdrawn.} The paper now claims adaptive embedding compression on clinical
+twelve-lead ECG. The device-tier mapping is presented as arithmetic, not as a
+validated deployment result, and the title, abstract, introduction and
+conclusion have been rewritten accordingly. We have added reduced-lead and
+artefact-corruption experiments that bound the wearable question without
+pretending to settle it.
+
+\item \textbf{The computational argument was wrong in kind, not merely in
+precision.} Reviewer 1's observation that the backbone dominates inference
+cost is correct and is fundamental to the method: prefix truncation occurs
+after the encoder has run, so latency is flat in $d$ by construction. We now
+measure this on real hardware and state it explicitly as a limitation of MRL.
+The previous device-tier latency table, produced by scaling one GPU
+measurement by a ratio of nominal device throughputs, has been deleted.
+
+\item \textbf{Fixed-dimension baselines with the same backbone have been
+added} at every nesting dimension and every seed. We further note that our
+previous headline comparison---an Inception1D MRL model against XResNet1D-101
+fixed baselines---confounded nesting with backbone choice and could not
+support the conclusion we drew from it.
+
+\item \textbf{Uncertainty quantification throughout}: five seeds per
+condition, bootstrap confidence intervals, DeLong tests, Holm correction, and
+an equivalence test with a pre-registered margin for the central invariance
+claim.
+
+\item \textbf{The clinical feature hierarchy is now measured}, by ridge
+probing of eleven physiological descriptors against each embedding prefix. We
+commit to reporting the outcome whichever way it falls, including withdrawing
+the hierarchy table if the probes do not support it.
+
+\item \textbf{Cross-dataset evaluation} on CPSC-2018, Chapman--Shaoxing and
+Georgia, with an explicit statement that the SNOMED-CT to superclass mapping
+is lossy.
+\end{enumerate}
+
+We also corrected four issues the reviewers did not raise but which we found
+while preparing the revision, listed in Section~\ref{sec:selffound}.
+
+\medskip
+\noindent\textcolor{red}{\textbf{Note to co-authors:} numbers marked \TBD{} in
+the revised manuscript are populated automatically from
+\texttt{scripts/aggregate\_results.py} once the experiment matrix has been
+run. This letter should be finalised after that point, and the outcome-dependent
+passages below (marked $\dagger$) resolved to what was actually measured.}
+
+\section{Reviewer 1}
+
+\subsection*{Major comment 1 --- Wearable claim not supported by PTB-XL}
+
+\comment{The evaluation is performed only on PTB-XL\ldots substantially
+different from wearable ECGs, ambulatory recordings, noisy signals, and
+single-lead settings\ldots Without one of these additions, the deployment
+claim should be recalibrated and framed more narrowly as adaptive embedding
+compression on PTB-XL.}
+
+\response We accept this in full, and have taken the recalibration option
+seriously rather than treating it as a fallback.
+
+The title no longer contains ``wearable-to-cloud''. Section~I now includes an
+explicit subsection, \textit{Scope, and what this paper does not claim},
+separating three claims that the previous version conflated: embedding
+compressibility (demonstrated), deployment mapping (arithmetic), and on-device
+wearable validation (not established). The abstract states the last of these
+as an open question.
+
+We have additionally added the strongest proxies available without new data
+collection:
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+\item \textbf{Cross-dataset transfer} to CPSC-2018, Chapman--Shaoxing/Ningbo
+and Georgia (Section~V-E1). We report these with the caveat that the
+SNOMED-CT to superclass mapping is many-to-one and lossy, so they measure
+concept transfer under shift rather than identical-task performance.
+\item \textbf{Reduced-lead evaluation} down to single-lead input, in both
+zero-shot and natively-trained regimes (Section~V-E2).
+\item \textbf{Artefact robustness} across baseline wander, EMG, electrode
+motion and mains interference at SNRs from 20\,dB to 0\,dB (Section~V-E3).
+\end{itemize}
+
+We are explicit that these are proxies: synthesised artefacts injected into
+clinically acquired signals are not dry-electrode wearable recordings, and
+masking leads is not a single-lead acquisition geometry. Regarding the
+suggestion of HEEDB, MIMIC-IV-ECG or CODE-15\%, our released pipeline supports
+these corpora directly; we have not exercised them because they require
+credentialed access, and we identify scale as an explicit limitation
+(Section~VI-D).
+
+\changed{Title; abstract; new Section~I-A; new Sections~V-E1--V-E3;
+Figs. (leads, robustness); Table~(external); Section~VI-B, VI-D.}
+
+\subsection*{Major comment 2a --- Computational benefit not established}
+
+\comment{Reducing the embedding dimensionality reduces representation size,
+but the full backbone still has to be executed and appears to dominate
+inference cost. Therefore, claims about latency, memory, and energy advantages
+require real-device benchmarking or a more careful limitation of the claims.}
+
+\response This is the most important comment in either review, and the
+reviewer is right about the mechanism, not merely about the evidence. Prefix
+truncation is a pointer offset applied \emph{after} the encoder has run;
+latency, energy and peak activation memory are therefore invariant to $d$ by
+construction. No amount of additional measurement would change this.
+
+We have done both things the reviewer offers as alternatives. We now measure
+on real hardware---GPU with CUDA-event timing and NVML energy integration,
+multi- and single-threaded CPU, dynamically quantised CPU, and ONNX
+Runtime---and we have rewritten the efficiency claim. Section~V-C now states
+that nesting reduces (i) embedding storage and transmission, by up to
+32$\times$, and (ii) the number of maintained model artefacts, with the
+associated validation and certification burden; and that it does \emph{not}
+reduce inference latency, energy or activation memory. Table (related
+work) now carries a ``compute saving'' column in which our own method is
+marked \textit{No}.
+
+The previous Table~III has been deleted. Its Cortex-M4 column was an
+analytical extrapolation from an Apple MPS measurement scaled by nominal
+device throughput, which we should not have presented in a table of measured
+quantities.
+
+\changed{Section~V-C rewritten; new measured Table~(compute) and
+Fig.~(latency); old Table~III removed; Section~VI-B; related-work table
+column added; \texttt{scripts/benchmark\_hardware.py} released.}
+
+\subsection*{Major comment 2b --- Fixed-dimension Inception1D baselines}
+
+\comment{Since the best proposed model uses Inception1D, fixed-dimension
+Inception1D baselines should be included.}
+
+\response Added, at all six dimensions and all five seeds, for both backbones.
+
+We want to acknowledge the deeper issue this exposes. Our previous headline
+claim---that the MRL model ``outperforms six independently trained
+34M-parameter baselines''---compared an Inception1D MRL model against
+XResNet1D-101 fixed baselines. Since Inception1D also outperformed
+XResNet1D-101 \emph{under MRL}, that comparison confounded nesting with
+backbone choice and could not establish what we claimed. The matched baselines
+now separate the two factors, and we have removed the inference that the
+multi-granularity loss acts as a regulariser, which rested on the same
+confounded comparison (Section~VI-C).
+
+\changed{Table~(main) restructured; Section~V-B; Section~VI-C;
+\texttt{run\_all.sh} Stage~3.}
+
+\subsection*{Major comment 2c --- Repeated runs and statistical testing}
+
+\comment{Repeated runs, confidence intervals, or statistical testing are also
+needed, because some reported differences are small.}
+
+\response Every condition is now trained with five seeds and reported as mean
+$\pm$ SD. Test-set uncertainty uses bootstrap over recordings ($B$=2{,}000);
+model comparisons use paired bootstrap and DeLong's test with Holm correction
+across the six dimensions.
+
+One methodological point we would highlight: our central claim is that
+performance is \emph{stable} across dimensions, which is a claim of no
+meaningful difference. A non-significant superiority test cannot establish
+that. We therefore pre-register an equivalence margin of $\pm$0.01 macro AUC
+(roughly half the seed-to-seed SD of a PTB-XL classifier) and require the
+whole confidence interval of the difference to fall inside it
+(Section~IV-E, Table~(stats)).
+
+\changed{New Section~IV-E; Table~(stats); all tables report SD; seed bands in
+all figures; \texttt{mecg/analysis/stats.py}.}
+
+\subsection*{Minor comment 1 --- Terminology}
+
+\comment{The terminology around ``wearable'', ``IoT'', and ``deployment''
+should be made more precise, distinguishing between conceptual deployment
+mapping, actual on-device inference, and validation on wearable data.}
+
+\response We have adopted exactly this three-way distinction and made it
+structural: it is enumerated in Section~I-A, maintained consistently in
+Sections~III-F, V-C and V-E, and revisited in the discussion. ``IoT'' has
+largely been removed, since it was doing rhetorical rather than technical
+work. We now write ``deployment mapping'' for the arithmetic,
+``on-device inference'' for execution on target hardware, and ``wearable
+validation'' for evaluation on wearable-acquired data, and we state which of
+the three each claim belongs to.
+
+\section{Reviewer 2}
+
+\subsection*{Comment 1 --- Does not outperform stronger PTB-XL classifiers}
+
+\comment{The proposed model does not outperform stronger reported PTB-XL
+classifiers and its contribution is mainly adaptive compression rather than
+improved ECG diagnosis.}
+
+\response Correct, and we now say so directly rather than allowing the
+framing to imply otherwise. Section~V-G presents the comparison with an
+explicit statement that we make no accuracy claim, and that published
+non-adaptive systems each serve one operating point. Section~I states that we
+decline the superiority framing, and the abstract characterises the
+contribution as concerning the \emph{shape} of the accuracy--dimension curve
+rather than its height.
+
+We also note---since it bears on the reviewer's point---that our absolute
+performance is below the Strodthoff \etal{} benchmark for the same
+architectures. We identified a probable cause during revision
+(Section~\ref{sec:selffound}, item 1) and have corrected it; whether the gap
+closes will be evident in the revised results.
+
+\subsection*{Comment 2 --- Missing fixed Inception1D baseline}
+
+\response Addressed above (Reviewer 1, major 2b).
+
+\subsection*{Comment 3 --- Deployment claims not validated on hardware}
+
+\response Addressed above (Reviewer 1, major 2a). Measurements are now real;
+the claim has been narrowed to what measurement supports.
+
+\subsection*{Comment 4 --- Clinical hierarchy is speculative}
+
+\comment{The proposed clinical hierarchy of embedding dimensions is
+speculative and not validated by probing or interpretability analysis.}
+
+\response Accepted. The previous Table~II asserted a mapping from nesting
+dimensions to clinical features on the basis of a gradient-flow argument that
+establishes only that leading coordinates receive more gradient signal---not
+that they encode any \emph{particular} feature. The inference did not follow.
+
+We now test it. Eleven physiological descriptors (RR statistics, QRS duration,
+QT, ST level, T-wave amplitude, R and P amplitude, frontal axis) are extracted
+from the raw waveforms; ridge probes are fitted on training-split embeddings
+and evaluated out-of-sample; and we record the saturation dimension for each
+descriptor. Section~V-D reports the rank correlation between hypothesised and
+measured ordering, plus prefix CKA, effective rank and the variance profile.
+
+$\dagger$ We state in the manuscript, before seeing the outcome, what each
+result would mean: if saturation order tracks the hypothesis, the nesting
+structure has a physiological interpretation; if all descriptors saturate at
+the smallest prefix, the parsimonious conclusion is that the diagnostic
+manifold is simply low-dimensional, which explains the flat AUC profile
+equally well but licenses no claim about what particular coordinate ranges
+encode. In that case the hierarchy table will be withdrawn rather than
+reinterpreted.
+
+\changed{Old Table~II removed pending the probing result; new Section~V-D;
+Table~(probe); Fig.~(probing); \texttt{mecg/analysis/probing.py},
+\texttt{features.py}.}
+
+\subsection*{Comment 5 --- Limited to PTB-XL five-class}
+
+\response Cross-dataset evaluation added (Reviewer 1, major 1). On finer
+granularity: we have not added the 44-class task, and we explain why this is
+more than a resource question. If the flat profile is explained by low
+intrinsic dimensionality, the sufficient prefix should \emph{grow} with task
+granularity---so the 44-class result is a genuine test of the mechanism rather
+than a routine extension, and we would rather flag it as the sharpest open
+prediction (Section~VI-D, VI-E) than report it hastily. Our preprocessing
+pipeline supports it via \texttt{--task subdiagnostic}.
+
+\subsection*{Comment 6 --- No uncertainty analysis}
+
+\response Addressed above (Reviewer 1, major 2c).
+
+\section{Issues we identified ourselves}
+\label{sec:selffound}
+
+\begin{enumerate}[leftmargin=*,itemsep=4pt]
+\item \textbf{Normalisation destroyed voltage information.} The original
+pipeline applied per-record, per-lead $z$-scoring, dividing each lead by its
+own standard deviation. This removes \emph{absolute} amplitude---which is the
+diagnostic criterion for ventricular hypertrophy (Sokolow--Lyon, Cornell).
+HYP was by far our worst class (AUC 0.811 against 0.93 for NORM), and we
+believe this is why. Normalisation now uses training-split statistics; the
+comparison is retained as an ablation. This may also account for part of the
+gap to the published PTB-XL benchmark noted by Reviewer 2.
+
+\item \textbf{Weight decay applied to normalisation parameters.} The
+optimiser grouped parameters by the substring test \texttt{'bn' in name},
+which missed every BatchNorm nested inside a convolutional block. Now grouped
+by \texttt{param.ndim <= 1}.
+
+\item \textbf{F1 evaluated at a fixed 0.5 threshold.} For an imbalanced
+multi-label task this substantially understates F1 and explains most of the
+apparent inconsistency between our AUC ($\approx$0.90) and F1 ($\approx$0.62).
+Thresholds are now tuned per class on validation and frozen for test.
+
+\item \textbf{Paper--code mismatch and citation errors.} The manuscript
+described the Inception1D backbone as using squeeze-and-excitation attention;
+the released implementation did not. SE is now genuinely enabled. We also
+corrected citations: XResNet1D was attributed to He \etal{} (ResNet) and
+Inception1D to Szegedy \etal{} (GoogLeNet), where the relevant references are
+Strodthoff \etal{} and Ismail Fawaz \etal{} (InceptionTime) respectively.
+
+\item \textbf{SVD baseline leakage.} The basis and classifier were fitted on
+the test partition and evaluated on it. The manuscript acknowledged this as
+``optimistically biased'' but nonetheless plotted the curve as an upper bound
+against honestly evaluated models. Both are now fitted on the training split.
+
+\item \textbf{Model selection on the largest head.} Early stopping used
+validation AUC at $d$=512, biasing the checkpoint toward one operating point.
+Selection now uses the mean across granularities.
+
+\item \textbf{Figure axis scaling.} The original Pareto figure used a
+0.02-AUC vertical window, magnifying sub-0.005 differences into visually
+dramatic gaps and suggesting structure that is within seed noise. Axes are no
+longer zoomed and seed variability is shown.
+\end{enumerate}
+
+\section*{Closing}
+
+Two of these criticisms---the compute mechanism and the confounded
+baseline---changed our understanding of what we had shown, and the revision is
+correspondingly a restructuring rather than an addition of experiments. We
+believe the narrower claim is the more useful contribution, and we are
+grateful to both reviewers for pressing on exactly the points that needed it.
+
+\end{document}

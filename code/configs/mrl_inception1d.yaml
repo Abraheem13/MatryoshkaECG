@@ -1,0 +1,51 @@
+# Proposed model: Inception1D backbone with Matryoshka nesting head.
+project_name: matryoshka_ecg
+seed: 0
+deterministic: true
+
+data:
+  norm_mode: dataset        # 'dataset' (train-split statistics, preserves
+                            # absolute voltage) or 'per_record' (original
+                            # submission; destroys amplitude information)
+  lead_subset: null         # null = all 12 leads
+
+model:
+  backbone: inception1d
+  head: mrl                 # mrl | mrl-e | linear
+  input_channels: 12
+  embedding_dim: 512
+  num_classes: 5
+  dropout: 0.3
+  backbone_kwargs:
+    num_blocks: 6
+    base_filters: 32
+    use_se: true            # the manuscript claimed SE; now actually enabled
+    width_mode: growing     # 'constant' = faithful InceptionTime
+    residual_every: 1
+
+nesting:
+  dims: [16, 32, 64, 128, 256, 512]
+  weight_strategy: equal    # equal | linear | exponential | inverse
+
+training:
+  epochs: 80
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.01
+  warmup_epochs: 5
+  label_smoothing: 0.0      # off by default; ablated separately
+  pos_weight: false
+  early_stopping_patience: 15
+  gradient_clip_norm: 1.0
+  num_workers: 8
+  pin_memory: true
+
+augmentation:
+  enabled: true
+  gaussian_noise_std: 0.01
+  random_scale: [0.95, 1.05]
+  random_shift: 10
+  p_noise: 0.5
+  p_scale: 0.5
+  p_shift: 0.3
+  p_lead_dropout: 0.1

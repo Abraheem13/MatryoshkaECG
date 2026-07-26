@@ -1,0 +1,28 @@
+\section{Conclusion}
+
+We presented the first study of nested representation learning for ECG
+classification, and subjected its claims to the controls that compression
+papers usually omit: matched same-backbone baselines, equivalence testing with
+a pre-registered margin, measured rather than extrapolated computation, and
+representation probing that could have refuted the mechanism we proposed.
+
+The compressibility result holds. A single Inception1D encoder trained with a
+six-level Matryoshka objective attains \R{IncAUCsmall} macro AUC at $d$=16 and
+\R{IncAUClarge} at $d$=512 on PTB-XL, differences that are \R{EquivVerdict}
+within $\pm$\R{EquivMargin} AUC. One artefact serves every operating point,
+with a 32-fold reduction in embedding storage.
+
+The efficiency claim, correctly stated, is narrower than the framing this work
+originally carried. Nesting economises on embedding storage, transmission
+volume and the number of models an organisation must train, validate and
+certify. It does not economise on inference compute---latency is flat in $d$
+by construction---and no amount of device-tier tabulation changes that. We
+have therefore replaced the wearable-to-cloud framing with the claim the
+evidence supports: adaptive embedding compression on clinical twelve-lead ECG,
+with reduced-lead and artefact experiments that bound, but do not settle, the
+wearable question.
+
+We consider that a more useful contribution than the stronger claim would have
+been. Nested representations are a real and practically valuable property of
+ECG encoders; establishing precisely where their benefit lies, and where it
+does not, is what allows others to build on them correctly.

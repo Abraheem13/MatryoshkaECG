@@ -1,0 +1,41 @@
+\begin{abstract}
+Deploying electrocardiogram (ECG) classifiers across devices with different
+memory and bandwidth budgets conventionally requires training and validating a
+separate model for each target. Matryoshka Representation Learning (MRL)
+offers an alternative: a single encoder whose embedding can be truncated to any
+prefix length, so that one artefact serves every operating point. We present
+the first systematic study of nested representation learning for biosignals,
+and---in contrast to the promotional framing common to compression
+papers---we test how far the resulting claims actually hold.
+%
+On PTB-XL ($n$=2{,}158 held-out recordings, five diagnostic superclasses), a
+single Inception1D encoder trained with a six-level nesting objective attains a
+macro AUC of \R{IncAUCsmall} at $d$=16 (64\,B per embedding) and
+\R{IncAUClarge} at $d$=512 (2\,KB), across five independent training seeds. A
+paired bootstrap test shows the two operating points are \R{EquivVerdict}
+within a pre-registered margin of $\pm$\R{EquivMargin} AUC
+($\Delta$=\R{EquivDiff}, 95\%~CI [\R{EquivLo}, \R{EquivHi}]), establishing
+dimension invariance as a statistical result rather than an eyeballed one.
+%
+We add the three controls the compression literature usually omits.
+\emph{First}, fixed-dimension baselines trained with the identical backbone,
+schedule and seeds, which is the only comparison that isolates the effect of
+nesting. \emph{Second}, measured rather than extrapolated computation: on real
+hardware, end-to-end latency varies by \R{LatencySpread}\,ms across the entire
+32-fold range of $d$, because the encoder executes in full regardless of the
+truncation point. MRL therefore reduces embedding storage, transmission
+volume and the number of maintained model artefacts---not inference compute,
+a distinction the deployment literature routinely blurs. \emph{Third},
+representation probing that tests whether the embedding really organises
+coarse-to-fine: ridge probes recovering eleven physiological descriptors from
+each prefix yield a rank correlation of \R{HierRho} ($p$=\R{HierP}) between
+hypothesised and measured saturation order, so the intuitive
+``rhythm-first, morphology-later'' account is \R{HierVerdict}.
+%
+We further evaluate zero-shot transfer to three external corpora, graceful
+degradation under reduced-lead acquisition, and robustness to
+wearable-characteristic artefacts at controlled SNR. We conclude that nested
+embedding compression is a robust and useful property of ECG representations,
+while deployment on wearable hardware remains an inference from clinical
+resting-ECG evidence rather than a validated result.
+\end{abstract}

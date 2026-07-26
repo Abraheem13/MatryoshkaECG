@@ -1,0 +1,178 @@
+\section{Methodology}
+
+\subsection{Problem Formulation}
+
+Let $x \in \mathbb{R}^{C \times T}$ denote a multi-lead ECG recording with
+$C$ leads and $T$ temporal samples ($C$=12, $T$=1{,}000 at 100\,Hz). The
+multi-label task assigns $x$ a target $y \in \{0,1\}^K$ over $K$=5
+superdiagnostic classes. An encoder $F(\cdot\,;\theta_F)$ maps the input to an
+embedding $z = F(x;\theta_F) \in \mathbb{R}^d$.
+
+Conventional practice fixes $d$ and trains $N$ separate encoders
+$\{F_1,\dots,F_N\}$ for $N$ deployment tiers, incurring $N\cdot|\theta_F|$
+parameters and $N$ independent validation workflows. The nested alternative
+trains one encoder whose prefixes are individually usable.
+
+\subsection{Signal Preprocessing}
+\label{sec:preproc}
+
+Let $x^{\mathrm{raw}} \in \mathbb{R}^{C\times T}$ be the recording in physical
+units (mV). We standardise each lead using statistics computed once over the
+\emph{training split}:
+\begin{equation}
+x^{\mathrm{norm}}_{c,t} = \frac{x^{\mathrm{raw}}_{c,t} - \mu_c}{\sigma_c},
+\qquad
+\mu_c, \sigma_c \ \text{from} \ \mathcal{D}_{\mathrm{train}}.
+\label{eq:norm}
+\end{equation}
+
+This differs from the per-record, per-lead $z$-scoring used in the earlier
+version of this work, and the difference is consequential. Per-record scaling
+divides each lead by its own standard deviation, which removes inter-patient
+amplitude variation but also \emph{destroys absolute voltage}. Voltage
+amplitude is the defining criterion for ventricular hypertrophy---the
+Sokolow--Lyon and Cornell indices are threshold tests on millivolt
+sums---so per-record normalisation discards precisely the evidence the HYP
+class depends on. We report this as an ablation
+(Section~\ref{sec:ablations}) because it plausibly explains both the weak HYP
+performance and part of the gap to the published PTB-XL benchmark.
+
+Training-time augmentation applies additive Gaussian noise
+($\sigma_n$=0.01, $p$=0.5), amplitude scaling ($\alpha \sim
+\mathcal{U}(0.95,1.05)$, $p$=0.5), circular temporal shift ($\delta \sim
+\mathcal{U}(-10,10)$ samples, $p$=0.3), and lead dropout zeroing one or two
+leads ($p$=0.1). No bandpass filtering is applied: at 100\,Hz the Nyquist
+limit already constrains the bandwidth to 50\,Hz.
+
+\subsection{Matryoshka Objective}
+
+Define nesting dimensions $\mathcal{M} = \{m_1,\dots,m_{|\mathcal{M}|}\}$ with
+$m_1 < \cdots < m_{|\mathcal{M}|} = d$. For each $m$, let $g_m:\mathbb{R}^m
+\to \mathbb{R}^K$ be a classifier operating on the prefix $z_{1:m}$. The
+objective is
+\begin{equation}
+\ell_{\mathrm{MRL}}(\theta_F, \{\theta_g\}) =
+\frac{1}{|\mathcal{M}|}\sum_{m \in \mathcal{M}}
+w_m \cdot \ell_{\mathrm{BCE}}\big(g_m(z_{1:m}),\, y\big),
+\label{eq:mrl}
+\end{equation}
+with $w_m$ = 1 uniformly and $\mathcal{M} = \{16,32,64,128,256,512\}$
+throughout. Alternative weightings are ablated in
+Section~\ref{sec:ablations}.
+
+Because $z_{1:m}$ is a strict prefix of $z_{1:m'}$ for $m<m'$, coordinate $j$
+receives gradient from every head with $m \ge j$:
+\begin{equation}
+\mathbb{E}\!\left[\left\|\frac{\partial \ell_{\mathrm{MRL}}}{\partial z_j}\right\|\right]
+= \frac{1}{|\mathcal{M}|}\!\!\sum_{\substack{m \in \mathcal{M} \\ m \ge j}}\!\!
+\mathbb{E}\!\left[\left\|\frac{\partial \ell_{\mathrm{BCE}}(g_m(z_{1:m}),y)}{\partial z_j}\right\|\right]\!.
+\label{eq:gradpressure}
+\end{equation}
+
+Since $|\{m \in \mathcal{M}: m \ge j\}|$ decreases monotonically in $j$,
+leading coordinates receive strictly more gradient signal. This is a
+\emph{structural} property of the objective, and it motivates the hypothesis
+that leading coordinates encode the most broadly discriminative features. It
+does not, however, establish that they encode any \emph{particular} clinical
+feature---a stronger claim requiring measurement, which
+Section~\ref{sec:probing} supplies.
+
+We use MRL with independent per-dimension heads, and additionally evaluate the
+efficient variant MRL-E, which replaces $|\mathcal{M}|$ classifiers with a
+single matrix $W \in \mathbb{R}^{K \times d}$ column-sliced per granularity:
+\begin{equation}
+g^{(E)}_m(z_{1:m}) = W_{:,1:m}\, z_{1:m}.
+\label{eq:mrle}
+\end{equation}
+This reduces classifier parameters from $K\sum_m m + K|\mathcal{M}|$ to
+$K d + K|\mathcal{M}|$.
+
+\subsection{Backbone Architectures}
+
+\textbf{Inception1D}~\cite{ismailfawaz2020} uses parallel convolutions with
+kernel sizes 9, 19 and 39 plus a max-pooled branch, concatenated
+channel-wise after a $1\times1$ bottleneck:
+\begin{equation}
+h_{\mathrm{inc}} = \mathrm{BN}\big(\mathrm{Cat}[\mathrm{Conv}_9(b),
+\mathrm{Conv}_{19}(b), \mathrm{Conv}_{39}(b), \mathrm{MaxPool}(x)]\big),
+\end{equation}
+with $b = \mathrm{Conv}_{1\times1}(x)$. Squeeze-and-excitation~\cite{hu2018}
+is applied within each block. We note a correction: the earlier version of
+this work described SE attention in the Inception1D configuration but the
+released implementation did not include it. SE is now genuinely enabled and
+the parameter counts reported here reflect that.
+
+\textbf{XResNet1D-101}~\cite{he2016,strodthoff2021} uses a three-layer
+convolutional stem (kernels 7, 3, 3) followed by four residual stages of
+$[3,4,23,3]$ SE-bottleneck blocks, global average pooling and a linear
+projection to $d$.
+
+Both terminate in a $d$-dimensional embedding followed by batch
+normalisation. Exact parameter counts, measured rather than quoted, appear in
+Table~\ref{tab:compute}.
+
+\subsection{Training Procedure}
+
+Algorithm~\ref{alg:train} summarises training. All heads are optimised jointly
+in a single backward pass. We use AdamW~\cite{loshchilov2019} with cosine
+annealing after linear warmup, gradient clipping at norm 1.0, and weight decay
+applied only to parameters with $\mathrm{ndim} > 1$ (a correction: the
+previous implementation's substring-based parameter grouping applied decay to
+normalisation parameters nested inside convolutional blocks).
+
+Model selection uses the \emph{mean} validation macro AUC across all
+granularities rather than the AUC at $d$=512. Selecting on the largest head
+alone biases the checkpoint toward one operating point, which is exactly the
+behaviour a nested model should avoid.
+
+\begin{algorithm}[!t]
+\caption{MRL-ECG training}
+\label{alg:train}
+\begin{algorithmic}[1]
+\Require training set $\mathcal{D}$, nesting dims $\mathcal{M}$, epochs $E$,
+patience $P$
+\Ensure $\theta_F^*$, $\{\theta_{g_m}^*\}_{m\in\mathcal{M}}$
+\State initialise encoder $F$ and heads $\{g_m\}$; $a^* \gets 0$; $w \gets 0$
+\For{$e = 1$ to $E$}
+  \For{each mini-batch $\mathcal{B} \subset \mathcal{D}$}
+    \State $\mathcal{B}' \gets \mathrm{Augment}(\mathrm{Normalise}(\mathcal{B}))$
+    \State $Z \gets F(\mathcal{B}'; \theta_F)$
+    \State $\ell \gets \frac{1}{|\mathcal{M}|}\sum_{m} w_m
+           \ell_{\mathrm{BCE}}(g_m(Z_{:,1:m}), y)$
+    \State update $\theta_F, \{\theta_{g_m}\}$ via AdamW on $\nabla\ell$
+  \EndFor
+  \State $a \gets \frac{1}{|\mathcal{M}|}\sum_m
+         \mathrm{macroAUC}(g_m, \mathcal{D}_{\mathrm{val}})$
+         \Comment{mean over granularities}
+  \If{$a > a^*$}
+    \State $a^* \gets a$; checkpoint; $w \gets 0$
+  \Else
+    \State $w \gets w+1$; \textbf{if} $w \ge P$ \textbf{then break}
+  \EndIf
+\EndFor
+\State tune per-class thresholds on $\mathcal{D}_{\mathrm{val}}$; freeze for test
+\end{algorithmic}
+\end{algorithm}
+
+Decision thresholds for F1 are tuned per class on the validation split and
+then frozen. The earlier version evaluated F1 at a fixed threshold of 0.5,
+which for an imbalanced multi-label problem understates F1 substantially and
+accounts for most of the apparent discrepancy between the reported AUC
+($\approx$0.90) and F1 ($\approx$0.62).
+
+\subsection{Deployment Mapping}
+\label{sec:deployment}
+
+Given a device embedding budget $B_\tau$ bytes, the admissible truncation
+point is
+\begin{equation}
+\pi(\tau) = \max\{m \in \mathcal{M} : 4m \le B_\tau\},
+\label{eq:deploy}
+\end{equation}
+the factor 4 accounting for float32 storage. We present
+Equation~\ref{eq:deploy} as arithmetic, not as a validated deployment
+result. It states which truncation point \emph{fits} a given budget; whether
+the resulting diagnostic behaviour is acceptable on data acquired by that
+device is a separate empirical question, addressed only partially by the
+reduced-lead and artefact experiments of Section~\ref{sec:wearable} and not at
+all by execution on microcontroller hardware, which we have not performed.

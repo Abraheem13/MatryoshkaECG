@@ -1,0 +1,120 @@
+\section{Discussion}
+
+\subsection{What the evidence supports}
+
+The compressibility result is robust. Across two backbone families, five
+seeds, and a 32-fold range of embedding dimension, macro AUC varies by less
+than the seed-to-seed standard deviation of the training procedure itself, and
+an equivalence test with a pre-registered margin confirms this rather than
+merely failing to reject a null. For twelve-lead resting ECG and five-class
+superdiagnostic labels, the diagnostic manifold is low-dimensional enough that
+sixteen coordinates suffice.
+
+The practical consequence is genuine but narrower than the compression
+literature typically advertises. A single artefact replaces a family of
+per-dimension models, with the corresponding reduction in training,
+validation, storage and---in a regulated setting~\cite{fda2021}---certification
+burden. Where embeddings are transmitted or indexed at scale, the 32-fold
+storage reduction is the dominant saving.
+
+\subsection{What it does not support}
+
+\textbf{Inference compute.} Nesting leaves it untouched, as
+Section~\ref{sec:compute} measures directly. This is inherent to the method
+rather than an implementation shortcoming: prefix truncation happens after the
+encoder has run. Papers that present MRL as an edge-efficiency technique
+without this qualification are, we think, misleading readers about where the
+saving lies. The complementary axis---quantisation, distillation, a smaller
+encoder---remains entirely available and is where compute savings must come
+from. We measure the first of these directly (Section~\ref{sec:quant}): INT8
+quantisation composes with nesting, and the differential penalty column of
+Table~\ref{tab:quant} reports whether it degrades small prefixes more than
+large ones. That interaction has not to our knowledge been examined for nested
+representations in any domain, and it is the one that determines whether the
+two techniques can be stacked safely at the smallest operating points.
+
+\textbf{Wearable deployment.} PTB-XL is clinical, twelve-lead, resting and
+wet-electrode. Our reduced-lead and artefact experiments probe the gap but do
+not close it. Establishing wearable viability requires ECGs acquired by
+wearable hardware, ideally with paired clinical reference, and execution on the
+target microcontroller. Neither is present here, and a device-tier table
+mapping dimensions to smartwatches would misrepresent what has been shown. We
+have removed it.
+
+\textbf{Diagnostic accuracy.} Our absolute performance sits below the
+strongest published PTB-XL systems. The mechanism studied here is orthogonal
+to backbone quality, and the flat accuracy--dimension profile is measured
+within a fixed training protocol, but a paper proposing nesting for clinical
+use would need to demonstrate it on a competitive encoder.
+
+\subsection{On the interpretation of flatness}
+
+It is worth being precise about why performance is flat, because two
+explanations are easily conflated and they have different implications.
+
+Under the \emph{regularisation} account, the multi-granularity loss constrains
+the encoder in a way that improves the leading coordinates. Under the
+\emph{low-dimensionality} account, the five-superclass task simply does not
+require more than a few coordinates, and any reasonable training procedure
+concentrated on a prefix would find them. The two are distinguishable: the
+regularisation account predicts that MRL beats same-backbone fixed-dimension
+training at small $d$, whereas the low-dimensionality account predicts
+equivalence. The matched baselines of Table~\ref{tab:main} are precisely this
+test, and the probing analysis of Section~\ref{sec:probing} bears on it
+further---if all descriptors saturate immediately, low-dimensionality is the
+parsimonious reading.
+
+The previous version asserted the regularisation account on the basis of a
+cross-architecture comparison, which cannot distinguish the two. We flag this
+explicitly because the same inferential slip is common in the adaptive-model
+literature: an adaptive model outperforming a differently-architected fixed
+model is evidence about architectures, not about adaptivity.
+
+The observation that $d$=16 sometimes slightly \emph{exceeds} $d$=512 warrants
+similar restraint. The gap is well inside seed noise, and treating it as a
+real regularisation effect over-reads the data. Our tables report it with
+uncertainty attached and draw no mechanism from it.
+
+\subsection{Limitations}
+
+\begin{enumerate}
+\item \textbf{Task granularity.} Only the five-class superdiagnostic task is
+evaluated. The 44-class diagnostic and 71-class ``all'' PTB-XL tasks have
+higher intrinsic dimensionality, and there is no reason to expect $d$=16 to
+suffice for them. If the low-dimensionality account is correct, the
+sufficient prefix should grow with task granularity---a prediction the
+framework makes and that we have not tested.
+
+\item \textbf{No wearable hardware.} No microcontroller execution, no
+wearable-acquired data. Latency on embedded targets is unmeasured and, given
+the analysis above, unlikely to benefit from nesting in any case.
+
+\item \textbf{Label mapping in transfer.} SNOMED-CT to superclass mapping is
+many-to-one and lossy; external results measure concept transfer under shift,
+not identical-task performance.
+
+\item \textbf{Synthetic artefacts.} Injected noise at controlled SNR
+approximates but does not reproduce dry-electrode ambulatory recording.
+
+\item \textbf{Scale.} PTB-XL is small by contemporary standards. Corpora such
+as MIMIC-IV-ECG and CODE-15\% offer two to three orders of magnitude more
+data; whether nesting behaves the same at that scale, and whether the
+sufficient prefix grows with dataset size, is open. Our pipeline supports
+these corpora but they require credentialed access we have not exercised.
+
+\item \textbf{Single sampling rate.} Only the 100\,Hz variant is evaluated;
+higher rates resolve morphology that may not compress identically.
+\end{enumerate}
+
+\subsection{Future work}
+
+The most valuable next step is the one we could not take: wearable-acquired
+ECGs with clinical reference labels, evaluated on target hardware. Beyond
+that, three directions follow from the analysis. Combining nesting with
+quantisation would address the compute axis that nesting leaves untouched.
+Extending to finer diagnostic granularities would test whether the sufficient
+prefix scales with task complexity, which is the sharpest prediction the
+low-dimensionality account makes. Applying the same probing methodology to
+other biosignal modalities (EEG, PPG, EMG) would establish whether nested
+compressibility is a property of ECG specifically or of physiological
+time series generally.

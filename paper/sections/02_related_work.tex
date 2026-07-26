@@ -1,0 +1,92 @@
+\section{Related Work}
+
+\subsection{Deep Learning for ECG Classification}
+
+Hannun \etal~\cite{hannun2019} reported cardiologist-level arrhythmia
+detection from single-lead ambulatory recordings using a 34-layer
+convolutional network trained on 53{,}549 patients; Ribeiro
+\etal~\cite{ribeiro2020} extended this to twelve-lead ECGs over two million
+recordings. On PTB-XL specifically, Strodthoff \etal~\cite{strodthoff2021}
+established the benchmarking protocol used here and reported macro AUC of
+0.925--0.937 for superdiagnostic classification with XResNet1D and
+Inception1D backbones. Subsequent work has explored attention
+mechanisms~\cite{yao2020}, self-supervised pretraining~\cite{kiyasseh2021},
+transformers~\cite{yan2019,natarajan2020} and multi-task formulations.
+
+We position our results relative to this literature honestly: the encoders
+used here are standard and not tuned for peak accuracy, and their absolute
+performance sits below the strongest published numbers. The object of study is
+the accuracy--dimension relationship under nesting, which is measured within a
+fixed training protocol and is therefore unaffected by that offset. Where
+absolute performance matters---in the state-of-the-art comparison of
+Section~\ref{sec:sota}---we say so explicitly rather than presenting adaptive
+and non-adaptive systems as though they were competing on the same axis.
+
+\subsection{Efficient Models for Edge Deployment}
+
+Knowledge distillation~\cite{hinton2015} transfers a large teacher's output
+distribution to a compact student, typically achieving 2--4$\times$
+compression with modest accuracy loss~\cite{li2023kd}. Pruning~\cite{han2016}
+removes redundant weights; quantisation~\cite{jacob2018} reduces numerical
+precision. TinyML systems have demonstrated arrhythmia detection within
+kilobyte-scale memory budgets~\cite{sakr2023,banbury2020}. Early-exit
+networks~\cite{teerapittayanon2016} and slimmable
+architectures~\cite{yu2019} allow a degree of runtime adaptivity, but through
+specialised multi-branch or width-switchable designs.
+
+Two distinctions are worth drawing carefully, since they are frequently
+elided. First, these methods reduce \emph{inference compute}; MRL does not.
+Second, they produce a distinct artefact per operating point; MRL does not.
+The methods are therefore complementary rather than competing---quantising an
+MRL encoder addresses the compute axis that nesting leaves untouched---and we
+treat them as such throughout.
+
+\subsection{Nested Learning and Matryoshka Representations}
+
+Behrouz \etal~\cite{behrouz2025} formalised Nested Learning as a view of
+machine learning models as systems of nested optimisation problems with
+distinct context flows and update rates. Matryoshka Representation
+Learning~\cite{kusupati2022} instantiates this in representation space: for a
+predefined set of nesting dimensions, the first $m$ coordinates of the
+embedding independently constitute a usable representation. On ImageNet this
+yields up to 14$\times$ smaller embeddings at equivalent accuracy.
+MatFormer~\cite{kudugunta2023} extends nesting to transformer weights, and
+adaptive retrieval systems built on MRL are deployed at
+scale~\cite{kusupati2023adanns}.
+
+Within medicine, MRL has been applied to histopathology
+segmentation~\cite{golts2025} and biomedical text
+embeddings~\cite{wang2024pubmedbert}. Neither addresses time-series
+biosignals, where the relevant structure---quasi-periodic morphology at
+multiple timescales---differs substantially from both images and text.
+Table~\ref{tab:related} positions this work.
+
+\begin{table}[!t]
+\centering
+\caption{Positioning relative to existing approaches. ``Single artefact''
+means one set of weights serves all operating points; ``adaptive dim.'' means
+the operating point is selectable at inference without retraining;
+``compute saving'' means inference cost falls with the operating point.}
+\label{tab:related}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Approach & Single & Adaptive & Compute & 1-D \\
+         & artefact & dim. & saving & signals \\
+\midrule
+Distillation~\cite{hinton2015}      & No  & No      & Yes & Yes \\
+Pruning / quant.~\cite{han2016,jacob2018} & No & No & Yes & Yes \\
+TinyML ECG~\cite{sakr2023}          & No  & No      & Yes & Yes \\
+Slimmable nets~\cite{yu2019}        & Yes & Partial & Yes & No  \\
+Early exit~\cite{teerapittayanon2016} & Yes & Partial & Yes & Yes \\
+MRL (vision/NLP)~\cite{kusupati2022} & Yes & Yes    & No  & No  \\
+MatFormer~\cite{kudugunta2023}      & Yes & Yes     & Yes & No  \\
+\midrule
+This work                           & Yes & Yes     & No  & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Note that the ``compute saving'' column marks our own method \emph{No}. This
+is the honest entry, and it is the column that the deployment argument in
+Section~\ref{sec:compute} must therefore be built without.

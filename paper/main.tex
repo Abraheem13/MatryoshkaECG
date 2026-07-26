@@ -1,0 +1,84 @@
+%% ==========================================================================
+%%  Matryoshka-ECG -- REVISED MANUSCRIPT (major revision resubmission)
+%%  IEEE Journal of Biomedical and Health Informatics
+%%
+%%  Build:   latexmk -pdf main.tex        (or: make)
+%%
+%%  NUMBERS POLICY
+%%  --------------
+%%  Every quantitative result is a macro defined in generated/numbers.tex,
+%%  which is written by code/scripts/aggregate_results.py from the actual
+%%  experiment outputs. Until the pipeline is run, undefined macros render as
+%%  a visible red [TBD] rather than a plausible-looking number. Do not
+%%  hard-code results into this file.
+%% ==========================================================================
+\documentclass[journal,twoside]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{balance}
+
+\graphicspath{{figures/}}
+
+% --------------------------------------------------------------------------
+% Placeholder machinery: any result macro that has not yet been generated
+% renders as a conspicuous [TBD] so that no invented number can survive to
+% submission.
+% --------------------------------------------------------------------------
+\newcommand{\TBD}{\textcolor{red}{\textbf{[TBD]}}}
+\makeatletter
+\newcommand{\R}[1]{\@ifundefined{#1}{\TBD}{\csname #1\endcsname}}
+\makeatother
+\IfFileExists{generated/numbers.tex}{\input{generated/numbers.tex}}{}
+
+\newcommand{\etal}{\textit{et al.}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\begin{document}
+
+\title{Matryoshka Representation Learning for\\
+Adaptive-Fidelity ECG Classification:\\
+How Far Does Nested Compression Actually Generalise?}
+
+\author{Author~Name,~\IEEEmembership{Student~Member,~IEEE,}
+        Co-Author~Name,~\IEEEmembership{Member,~IEEE,}
+        and~Senior~Author~Name,~\IEEEmembership{Senior~Member,~IEEE}
+\thanks{Manuscript received XX XXXX; revised XX XXXX.}
+\thanks{The authors are with the Department of XXX, XXX University
+(e-mail: author@institution.edu).}
+\thanks{Code, trained checkpoints and the complete experiment log are
+available at \url{https://github.com/Abraheem13/Matryoshka-ECG_M1}.}}
+
+\markboth{IEEE Journal of Biomedical and Health Informatics,~Vol.~XX, No.~X, XXXX}%
+{Author \MakeLowercase{\textit{et al.}}: Matryoshka Representation Learning for Adaptive-Fidelity ECG Classification}
+
+\maketitle
+
+\input{sections/00_abstract}
+
+\begin{IEEEkeywords}
+Nested learning, Matryoshka representation learning, electrocardiography,
+embedding compression, adaptive inference, representation probing, PTB-XL.
+\end{IEEEkeywords}
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_method}
+\input{sections/04_experimental_setup}
+\input{sections/05_results}
+\input{sections/06_discussion}
+\input{sections/07_conclusion}
+
+\balance
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

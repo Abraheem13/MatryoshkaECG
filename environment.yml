@@ -1,0 +1,23 @@
+name: mecg
+channels: [pytorch, nvidia, conda-forge]
+dependencies:
+  - python=3.11
+  - pytorch>=2.2
+  - pytorch-cuda=12.1
+  - numpy>=1.26
+  - scipy>=1.11
+  - scikit-learn>=1.4
+  - pandas>=2.1
+  - matplotlib>=3.8
+  - pyyaml
+  - tqdm
+  - joblib
+  - h5py
+  - pip
+  - pip:
+    - wfdb>=4.1.0
+    - neurokit2>=0.2.7
+    - thop
+    - onnx
+    - onnxruntime
+    - nvidia-ml-py

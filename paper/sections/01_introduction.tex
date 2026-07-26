@@ -1,0 +1,94 @@
+\section{Introduction}
+
+\IEEEPARstart{C}{ardiovascular} disease accounts for approximately 17.9
+million deaths annually~\cite{who2023cvd}, and automated electrocardiogram
+(ECG) interpretation has advanced to cardiologist-level agreement on
+standardised corpora~\cite{hannun2019,ribeiro2020}. Translating those models
+into continuous monitoring, however, runs into a mundane engineering
+constraint: the devices that would carry them differ by orders of magnitude in
+memory, bandwidth and power. A smartwatch, a phone and a hospital workstation
+cannot host the same artefact, and the prevailing response is to train, tune,
+validate and separately certify one model per target~\cite{rajpurkar2022}.
+
+Existing compression techniques inherit that structure. Knowledge
+distillation~\cite{hinton2015}, pruning~\cite{han2016} and
+quantisation~\cite{jacob2018} each yield a \emph{new} model for each operating
+point; slimmable networks~\cite{yu2019} and early-exit
+architectures~\cite{teerapittayanon2016} relax it partially but require
+purpose-built multi-branch designs. Matryoshka Representation Learning
+(MRL)~\cite{kusupati2022}, a concrete instance of the nested learning paradigm
+recently formalised by Behrouz \etal~\cite{behrouz2025}, takes a different
+route: it trains a single encoder such that every prefix $z_{1:m}$ of the
+embedding is independently usable. One set of weights, one validation
+pathway, and an operating point selected at deployment time by a pointer
+offset. MRL underpins production embedding APIs~\cite{openai2024embeddings,
+google2025gemma3n} but has not been examined for physiological time series.
+
+\subsection{Scope, and what this paper does not claim}
+
+An earlier version of this work framed the contribution as spanning a
+``wearable-to-cloud continuum''. We have narrowed that framing deliberately,
+because the evidence does not reach it and the distinction matters for
+readers deciding whether to build on the method.
+
+PTB-XL comprises \emph{clinical, twelve-lead, resting} ECGs recorded with wet
+electrodes under supervision. Wearable acquisition differs along nearly every
+axis that matters: one or two dry-electrode leads, ambulatory motion
+artefacts, intermittent contact, and different noise statistics. Results
+obtained on the former do not automatically transfer to the latter, and
+presenting a device-tier table as though they do overstates what has been
+shown. We therefore separate three claims that are easily conflated:
+
+\begin{enumerate}
+\item \textbf{Embedding compressibility} (demonstrated here). Diagnostic
+information in twelve-lead ECG representations concentrates into a small
+leading prefix, and nesting exploits this at negligible cost.
+\item \textbf{Deployment mapping} (a design implication, not a result). A
+given embedding budget admits a given truncation point; this is arithmetic,
+and we present it as such.
+\item \textbf{On-device wearable validation} (\emph{not} established). This
+requires wearable-acquired data and microcontroller execution. We report
+reduced-lead and artefact-corrupted proxies, which bound the question without
+settling it, and identify it as the necessary next step.
+\end{enumerate}
+
+We also decline the conventional framing of accuracy superiority. Our models
+do not exceed the strongest published PTB-XL classifiers, and the mechanism of
+interest---nesting---is orthogonal to backbone quality. The contribution is
+that adaptivity is obtainable at negligible cost, which is a statement about
+the \emph{shape} of the accuracy--dimension curve rather than its height.
+
+\subsection{Contributions}
+
+\begin{enumerate}
+\item \textbf{Nested representation learning for biosignals.} The first
+application of Matryoshka representations to ECG classification, evaluated
+across two backbone families, six nesting granularities and five training
+seeds.
+
+\item \textbf{Like-for-like baselines.} Fixed-dimension models trained with
+the \emph{same} backbone, schedule, augmentation and seeds at every nesting
+dimension---the comparison that isolates the cost of nesting, and which
+cross-architecture comparisons cannot.
+
+\item \textbf{Statistical rather than visual conclusions.} Dimension
+invariance is assessed by an equivalence test with a pre-registered margin,
+model comparisons by paired bootstrap and DeLong tests with Holm correction.
+A claim of ``no difference'' requires an equivalence procedure; superiority
+tests cannot supply it.
+
+\item \textbf{Measured computation.} Latency, energy and memory are measured
+on real hardware across GPU, CPU, quantised CPU and ONNX Runtime. The
+resulting picture---latency flat in $d$---is less flattering than an
+extrapolated one but is what practitioners need in order to budget correctly.
+
+\item \textbf{Probing the hierarchy.} Ridge probes recovering eleven
+physiological descriptors from each prefix convert the intuitive
+coarse-to-fine story into a falsifiable measurement, and we report the outcome
+whichever way it falls.
+
+\item \textbf{Generalisation stress tests.} Zero-shot transfer to three
+external corpora, reduced-lead ablation down to single-lead input, and
+robustness to baseline wander, EMG, electrode motion and mains interference at
+controlled SNR.
+\end{enumerate}

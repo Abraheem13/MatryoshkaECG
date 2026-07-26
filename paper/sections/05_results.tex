@@ -1,0 +1,264 @@
+\section{Results}
+
+\subsection{Dimension Invariance Is Statistically Supported}
+
+Table~\ref{tab:main} reports test macro AUC across all nesting dimensions for
+both backbones and their matched fixed-dimension baselines, averaged over
+\R{NumSeeds} seeds. The Inception1D MRL model attains \R{IncAUCsmall} at
+$d$=16 and \R{IncAUClarge} at $d$=512.
+
+\input{generated/tab_main}
+
+The relevant question is not whether these two numbers differ---with finite
+data they always will---but whether the difference is smaller than a
+practically meaningful margin. Table~\ref{tab:stats} reports the equivalence
+test of Section~\ref{sec:statproto}: the paired difference is \R{EquivDiff}
+with 95\% CI [\R{EquivLo}, \R{EquivHi}], so $d$=16 and $d$=512 are
+\R{EquivVerdict} at the pre-registered $\pm$\R{EquivMargin} margin.
+
+\input{generated/tab_stats}
+
+Fig.~\ref{fig:pareto} shows the accuracy--dimension curves with seed
+variability. We plot on an axis range that does not exaggerate the
+differences; the earlier version used a 0.02-AUC window that magnified
+sub-0.005 differences into visually dramatic gaps, and the resulting figure
+suggested structure (notably a non-monotone fixed-baseline curve) that is
+within seed noise.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_pareto.pdf}
+\caption{Macro AUC against embedding dimension, mean over \R{NumSeeds} seeds
+with $\pm$1\,SD bands. Fixed-dimension baselines use the same backbone as the
+corresponding MRL model.}
+\label{fig:pareto}
+\end{figure}
+
+\subsection{Nesting Versus Same-Backbone Fixed Baselines}
+
+With the confound removed, the comparison is between an MRL model and
+fixed-dimension models of the \emph{same} architecture. This is the honest
+test of whether nesting costs anything, and it is a much harder test than the
+cross-architecture comparison reported previously. Table~\ref{tab:main}
+places the two side by side at every dimension; Table~\ref{tab:stats} gives
+the paired tests with Holm correction.
+
+We emphasise what a favourable outcome here would and would not mean. If
+nesting is statistically indistinguishable from per-dimension training, the
+practical argument is complete: one artefact replaces six at no measured cost.
+It would \emph{not} demonstrate that the multi-granularity loss acts as a
+useful regulariser---an interpretation the earlier version advanced on the
+basis of a cross-architecture difference that cannot support it.
+
+\subsection{Computation: Measured, Not Extrapolated}
+\label{sec:compute}
+
+Table~\ref{tab:compute} reports measured latency across GPU, multi-threaded
+CPU, single-threaded CPU, dynamically quantised CPU and ONNX Runtime, together
+with counted MACs and parameters.
+
+\input{generated/tab_compute}
+
+The central observation is that end-to-end latency varies by
+\R{LatencySpread}\,ms across the full 32-fold range of $d$
+(Fig.~\ref{fig:latency}). This is expected and unavoidable: prefix truncation
+is a pointer offset applied \emph{after} the encoder has run in full. The
+classifier heads contribute at most $K\cdot d$ multiply-accumulates against
+\R{MeasuredMACs}\,M for the encoder---a fraction below $10^{-4}$.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_latency.pdf}
+\caption{Measured end-to-end latency against nesting dimension (median of 200
+timed runs, batch size 1, error bars show IQR). Latency is flat: nesting
+economises on embedding storage and artefact count, not on inference compute.}
+\label{fig:latency}
+\end{figure}
+
+We therefore restate the efficiency claim precisely. Nesting reduces:
+\begin{enumerate}
+\item \textbf{Embedding storage and transmission}, by up to 32$\times$
+(2\,KB $\rightarrow$ 64\,B). For a device streaming embeddings over BLE, or a
+system indexing millions of embeddings for retrieval, this is the dominant
+cost and the saving is real.
+\item \textbf{Artefact count}, from $|\mathcal{M}|$ models to one, with the
+corresponding reduction in training, validation, storage and---in a regulated
+context---certification burden.
+\end{enumerate}
+Nesting does \emph{not} reduce inference latency, energy per inference, or
+peak activation memory. Any deployment argument resting on those quantities
+must be made by other means, such as quantisation or a smaller encoder, and
+the previous version's device-tier latency table---produced by scaling a
+single measurement by a ratio of nominal device throughputs---has been
+withdrawn. Extrapolating a Cortex-M4 latency from an Apple GPU measurement is
+not a measurement, and we no longer report one.
+
+\subsection{Does the Embedding Really Organise Coarse-to-Fine?}
+\label{sec:probing}
+
+Equation~\ref{eq:gradpressure} guarantees that leading coordinates receive
+more gradient signal. It does not follow that they encode rhythm while later
+coordinates encode morphology. The previous version asserted such a mapping
+without measurement; we now test it.
+
+Ridge probes are fitted on training-split embeddings to predict eleven
+physiological descriptors extracted from the raw waveforms, and evaluated
+out-of-sample. For each descriptor we record the \emph{saturation dimension}:
+the smallest prefix reaching 95\% of the best $R^2$ attained at any prefix.
+Table~\ref{tab:probe} compares measured saturation against the previously
+hypothesised ordering.
+
+\input{generated/tab_probe}
+
+The rank correlation between hypothesised and measured ordering is
+$\rho$=\R{HierRho} ($p$=\R{HierP}), so the coarse-to-fine account is
+\R{HierVerdict}.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_probing.pdf}
+\caption{Out-of-sample $R^2$ for each physiological descriptor as a function
+of prefix dimension. Stars mark saturation points.}
+\label{fig:probing}
+\end{figure}
+
+Two outcomes are informative here, and we commit in advance to reporting
+either. If saturation order tracks the hypothesis, the nesting structure has
+a genuine physiological interpretation and the device-tier mapping acquires a
+clinical rationale. If instead all descriptors saturate at the smallest
+prefix, the correct conclusion is that the diagnostic manifold is simply
+low-dimensional---which explains the flat AUC profile equally well, but
+provides no basis for assigning particular clinical meaning to particular
+coordinate ranges. In that case the feature-hierarchy table of the previous
+version must be withdrawn rather than reinterpreted. Supporting geometry
+(effective rank \R{EffRank}; fraction of embedding variance in the first 16
+coordinates \R{VarFracSixteen}) is reported alongside.
+
+\subsection{Generalisation Beyond PTB-XL}
+\label{sec:wearable}
+
+\subsubsection{Cross-dataset transfer}
+Table~\ref{tab:external} reports zero-shot macro AUC on the external corpora.
+Absolute performance is expected to fall, both from genuine distribution shift
+and from the lossy label mapping; the quantity of interest is whether the
+\emph{flatness} of the accuracy--dimension curve survives, since that is the
+property being claimed.
+
+\input{generated/tab_external}
+
+\subsubsection{Reduced-lead acquisition}
+Fig.~\ref{fig:leads} reports performance under progressively reduced lead
+sets, down to single-lead input, in two regimes: zero-shot masking of a
+twelve-lead model, and models trained natively on the reduced lead set. Both
+matter---the first is what happens when a deployed model receives degraded
+input, the second is what a purpose-built wearable model would achieve.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_leads.pdf}
+\caption{Macro AUC under reduced-lead input at $d$=16 and $d$=512. Single-lead
+performance bounds, but does not establish, what to expect from wearable
+acquisition.}
+\label{fig:leads}
+\end{figure}
+
+\subsubsection{Artefact robustness}
+Fig.~\ref{fig:robustness} sweeps four artefact classes characteristic of
+ambulatory recording---baseline wander, EMG contamination, electrode motion
+and mains interference---at SNRs from 20\,dB down to 0\,dB. Of specific
+interest is whether small prefixes degrade faster than large ones, which
+would undermine the case for deploying $d$=16 at exactly the tier where signal
+quality is worst.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig_robustness.pdf}
+\caption{Macro AUC at the smallest nesting dimension under simulated
+ambulatory artefacts across SNR.}
+\label{fig:robustness}
+\end{figure}
+
+\input{generated/tab_robustness}
+
+These are proxies. Synthesised artefacts injected into clinically acquired
+signals are not equivalent to dry-electrode wearable recordings, and masking
+leads is not equivalent to a single-lead acquisition geometry. They bound the
+question; they do not settle it.
+
+\subsection{Per-Class Stability}
+
+Table~\ref{tab:perclass} reports per-class AUC across nesting dimensions. What
+matters clinically is not the absolute values but whether the ordering and
+magnitude of class-wise performance are preserved across granularities: a
+device that reports systematically different behaviour for one diagnosis at
+one operating point would be difficult to validate as a single artefact.
+
+\input{generated/tab_perclass}
+
+\subsection{Quantisation: The Complementary Axis}
+\label{sec:quant}
+
+Since nesting does not reduce inference compute, we measure the lever that
+does. Table~\ref{tab:quant} reports INT8 post-training quantisation (dynamic
+and static) and half precision, with accuracy at every nesting dimension.
+
+\input{generated/tab_quant}
+
+The column of interest is the differential penalty: the change in AUC at the
+smallest prefix minus the change at the largest. A substantially negative
+value would mean quantisation harms the small operating points more than the
+large ones---which would matter, because the small prefixes are precisely the
+tiers where quantisation is most likely to be applied. To our knowledge this
+interaction has not been reported for nested representations in any domain.
+
+\subsection{Ablations}
+\label{sec:ablations}
+
+Table~\ref{tab:ablations} reports every training condition. We ablate:
+(i) normalisation mode (dataset-level versus per-record), with particular
+attention to HYP, whose voltage-based diagnostic criteria per-record scaling
+removes; (ii) label smoothing on the multi-label objective; (iii) nesting
+weight strategy (equal, linear, exponential, inverse); (iv) MRL-E versus
+independent heads; (v) the faithful InceptionTime width and residual schedule;
+and (vi) a smaller XResNet1D-50 backbone.
+
+\input{generated/tab_ablations}
+
+\subsection{Comparison With Published Systems}
+\label{sec:sota}
+
+Table~\ref{tab:sota} places our models alongside published PTB-XL results. We
+draw the comparison carefully. Our encoders do not exceed the strongest
+published classifiers, and we make no claim that they do. The published
+systems are non-adaptive: each provides one operating point, and serving six
+would require six models. Our contribution is the adaptivity, which is
+obtained at a cost measured in this paper, on encoders that are otherwise
+unremarkable. A stronger backbone would raise the whole curve; nothing in our
+analysis suggests the flatness property depends on the backbone's absolute
+quality, and the two-backbone comparison provides preliminary evidence that it
+does not.
+
+\begin{table}[!t]
+\centering
+\caption{Published PTB-XL superdiagnostic results for context. ``Operating
+points'' is the number of embedding dimensionalities served by a single
+trained artefact.}
+\label{tab:sota}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Method & Macro AUC & Params & Operating pts. \\
+\midrule
+XResNet1D-101~\cite{strodthoff2021} & 0.925 & 34\,M & 1 \\
+Inception1D~\cite{strodthoff2021}   & 0.921 & 4.2\,M & 1 \\
+Attention CNN~\cite{yao2020}        & 0.930 & $\sim$25\,M & 1 \\
+Transformer~\cite{yan2019}          & 0.918 & $\sim$20\,M & 1 \\
+Distillation~\cite{li2023kd}        & 0.910 & $\sim$5\,M & 1 \\
+TinyML ECG~\cite{sakr2023}          & 0.870 & $<$1\,M & 1 \\
+\midrule
+Inception1D-MRL (ours) & \R{IncAUCsmall}--\R{IncAUClarge} & \R{IncParams} & 6 \\
+XResNet101-MRL (ours)  & \R{XResAUCsmall}--\R{XResAUClarge} & \R{XResParams} & 6 \\
+\bottomrule
+\end{tabular}
+\end{table}

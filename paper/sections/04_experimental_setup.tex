@@ -1,0 +1,92 @@
+\section{Experimental Setup}
+
+\subsection{Implementation}
+
+Experiments use Python~\R{PythonVersion} and PyTorch~\R{TorchVersion} on
+\R{GPUName}. All reported environment details are emitted automatically by the
+benchmarking script rather than transcribed by hand. Code, configurations,
+checkpoints and the complete run log are released.
+
+\subsection{Datasets}
+
+\textbf{PTB-XL}~\cite{wagner2020,strodthoff2021} (v1.0.3) provides 21{,}799
+twelve-lead resting ECGs of 10\,s duration from 18{,}885 patients, released
+under CC-BY-4.0. We use the 100\,Hz variant and the five superdiagnostic
+classes: NORM (44.5\%), MI (25.6\%), STTC (24.5\%), CD (22.9\%) and HYP
+(12.4\%); approximately 28\% of recordings carry multiple labels. Following
+the official protocol, folds 1--8 form the training set, fold 9 validation and
+fold 10 the held-out test set. After removing recordings without diagnostic
+labels, 21{,}388 remain.
+
+\textbf{External corpora.} For cross-dataset evaluation we use CPSC-2018,
+Chapman--Shaoxing/Ningbo, and the Georgia twelve-lead database, all from the
+PhysioNet/CinC-2020 collection. Source annotations use SNOMED-CT codes with a
+finer, more rhythm-oriented vocabulary than PTB-XL's diagnostic superclasses;
+our mapping is many-to-one and necessarily lossy, and records whose codes map
+to no superclass are dropped. These results therefore measure transfer of the
+\emph{superclass concept} under distribution shift, not identical-task
+performance, and should not be read as directly comparable to the PTB-XL
+numbers.
+
+\subsection{Baselines}
+
+\textbf{(1) Fixed-dimension, same backbone.} For each backbone and each $m \in
+\mathcal{M}$, a separate encoder with a single classifier at dimension $m$,
+trained with identical data, augmentation, schedule, and seeds. This is the
+comparison that isolates the effect of nesting. The earlier version of this
+work compared an Inception1D MRL model against XResNet1D-101 fixed baselines
+and reported the difference as evidence for MRL; that comparison confounds
+nesting with backbone choice and cannot support the conclusion. Both
+confounds are separated here.
+
+\textbf{(2) SVD compression.} Truncated SVD of the 512-dimensional embeddings
+with logistic-regression classifiers on the projected features. Both the
+basis and the classifier are fitted on the \emph{training} split and applied
+unchanged to the test split. The earlier version fitted both on the test
+partition and evaluated on the same partition; although labelled
+``optimistically biased'', it was nonetheless plotted as an upper bound
+against honestly evaluated models.
+
+\textbf{(3) MRL-E.} The shared-weight variant of Equation~\ref{eq:mrle}.
+
+\textbf{(4) Published PTB-XL systems.} Reported for context in
+Section~\ref{sec:sota}, with the explicit caveat that these are
+non-adaptive systems evaluated on a different axis.
+
+\subsection{Hyperparameters}
+
+AdamW, learning rate $10^{-3}$, weight decay $10^{-2}$, batch size 128, cosine
+annealing with 5-epoch linear warmup, up to 80 epochs with early stopping
+(patience 15) on mean validation macro AUC. Label smoothing is disabled by
+default and ablated separately. All hyperparameters are fixed on fold 9; no
+tuning is performed on fold 10.
+
+\subsection{Statistical Protocol}
+\label{sec:statproto}
+
+Every model is trained with five seeds ($\{0,\dots,4\}$); tables report mean
+$\pm$ standard deviation. Test-set uncertainty is quantified by bootstrap over
+recordings ($B$=2{,}000).
+
+For comparisons between models evaluated on the same test set we use a
+\emph{paired} bootstrap resampling identical recording indices for both
+models, and DeLong's test~\cite{delong1988,sun2014} per class. Comparisons
+across the six nesting dimensions are corrected by the Holm step-down
+procedure.
+
+The central claim---that performance is stable across dimensions---is a claim
+of \emph{no meaningful difference}, which a superiority test cannot establish;
+failing to reject a null hypothesis is not evidence for it. We therefore
+pre-register an equivalence margin of $\pm$0.01 macro AUC and require the
+entire 95\% confidence interval of the difference to fall inside that margin.
+The margin is chosen as roughly half the typical seed-to-seed standard
+deviation of a PTB-XL classifier, so that ``equivalent'' means a difference
+smaller than the noise floor of the training procedure itself.
+
+\subsection{Evaluation Metrics}
+
+The primary metric is macro-averaged AUC-ROC following the PTB-XL
+standard~\cite{strodthoff2021}, which weights the rare HYP class equally.
+Secondary metrics are macro F1 (per-class thresholds tuned on validation) and
+macro average precision. All test metrics are computed on fold 10
+($n$=2{,}158).
