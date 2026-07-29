@@ -18,6 +18,23 @@ with 95\% CI [\R{EquivLo}, \R{EquivHi}], so $d$=16 and $d$=512 are
 
 \input{generated/tab_stats}
 
+A geometric measurement explains why. The \R{DimLarge}-dimensional
+embedding has an entropy-based effective rank of only \R{EffRank}, and the
+first \R{DimSmall} coordinates carry just \R{VarFracSixteen} of the total
+embedding variance. The representation is intrinsically low-dimensional:
+$d$=\R{DimSmall} suffices not because nesting compresses aggressively, but
+because there are few useful directions beyond that to preserve. Note that the
+leading coordinates are \emph{not} the high-variance ones---they hold a small
+fraction of total variance while supporting full diagnostic performance---so
+what the prefix concentrates is discriminability, not energy.
+
+Note also that the $d$=\R{DimSmall} versus $d$=\R{DimLarge} difference is
+statistically detectable ($p<0.001$) while remaining practically negligible.
+With 2{,}158 paired predictions a systematic 0.0013 AUC gap is resolvable;
+this is precisely why the analysis is framed as equivalence rather than as a
+failure to reject, since a significance test alone would license the opposite
+reading.
+
 Fig.~\ref{fig:pareto} shows the accuracy--dimension curves with seed
 variability. We plot on an axis range that does not exaggerate the
 differences; the earlier version used a 0.02-AUC window that magnified
@@ -43,12 +60,19 @@ cross-architecture comparison reported previously. Table~\ref{tab:main}
 places the two side by side at every dimension; Table~\ref{tab:stats} gives
 the paired tests with Holm correction.
 
-We emphasise what a favourable outcome here would and would not mean. If
-nesting is statistically indistinguishable from per-dimension training, the
-practical argument is complete: one artefact replaces six at no measured cost.
-It would \emph{not} demonstrate that the multi-granularity loss acts as a
-useful regulariser---an interpretation the earlier version advanced on the
-basis of a cross-architecture difference that cannot support it.
+At $d$=\R{DimSmall} the MRL model attains \R{IncAUCsmall} against 0.9264
+for the matched fixed-dimension baseline; at $d$=\R{DimLarge},
+\R{IncAUClarge} against 0.9268. Nesting is therefore at parity with
+per-dimension training at both extremes. A slight advantage appears at
+intermediate granularities which we do not interpret: the baselines were
+trained with a single seed and the gap is comparable to the seed-to-seed SD of
+the MRL model itself.
+
+This settles a question the previous version answered incorrectly. Parity
+completes the practical argument---one artefact replaces six at no measured
+cost---but provides no evidence that the multi-granularity loss acts as a
+regulariser. We withdraw that interpretation, which rested on a
+cross-architecture comparison incapable of supporting it.
 
 \subsection{Computation: Measured, Not Extrapolated}
 \label{sec:compute}
@@ -122,17 +146,22 @@ of prefix dimension. Stars mark saturation points.}
 \label{fig:probing}
 \end{figure}
 
-Two outcomes are informative here, and we commit in advance to reporting
-either. If saturation order tracks the hypothesis, the nesting structure has
-a genuine physiological interpretation and the device-tier mapping acquires a
-clinical rationale. If instead all descriptors saturate at the smallest
-prefix, the correct conclusion is that the diagnostic manifold is simply
-low-dimensional---which explains the flat AUC profile equally well, but
-provides no basis for assigning particular clinical meaning to particular
-coordinate ranges. In that case the feature-hierarchy table of the previous
-version must be withdrawn rather than reinterpreted. Supporting geometry
-(effective rank \R{EffRank}; fraction of embedding variance in the first 16
-coordinates \R{VarFracSixteen}) is reported alongside.
+The measured saturation order does not track the hypothesised one. We
+therefore withdraw the feature hierarchy asserted in the previous version
+rather than reinterpreting it.
+
+Two qualifications matter. First, the test is underpowered---eleven
+descriptors, and wave delineation fails on a subset of recordings---so we
+report the hierarchy as \emph{unsupported} rather than refuted. Second, the
+parsimonious explanation for the flat accuracy profile is the low intrinsic
+dimensionality reported in Section~\ref{sec:results}: an effective rank of
+\R{EffRank} means the diagnostic manifold has roughly \R{DimSmall} useful
+directions, which accounts for the sufficiency of small prefixes without
+attributing specific cardiac features to specific coordinate ranges. The
+gradient-pressure argument of Equation~\ref{eq:gradpressure} explains why
+leading coordinates are prioritised; it does not license a claim about
+\emph{which} physiological quantities they encode, and our measurement does
+not support one.
 
 \subsection{Generalisation Beyond PTB-XL}
 \label{sec:wearable}
@@ -147,11 +176,16 @@ property being claimed.
 \input{generated/tab_external}
 
 \subsubsection{Reduced-lead acquisition}
-Fig.~\ref{fig:leads} reports performance under progressively reduced lead
-sets, down to single-lead input, in two regimes: zero-shot masking of a
-twelve-lead model, and models trained natively on the reduced lead set. Both
-matter---the first is what happens when a deployed model receives degraded
-input, the second is what a purpose-built wearable model would achieve.
+Two regimes must be distinguished, and conflating them would misstate the
+wearable question. A twelve-lead model given only lead I at inference collapses
+to \R{LeadIAUC} macro AUC---near chance, because the encoder has never seen
+zeroed leads. A model trained \emph{natively} on lead I attains 0.8315, and a
+three-lead model 0.8924. The flat profile across $d$ persists in both.
+
+The honest reading: single-lead acquisition costs roughly nine AUC points
+relative to twelve-lead; that cost is orthogonal to the nesting question; and
+graceful degradation of a twelve-lead model is not a viable fallback---a
+purpose-built reduced-lead model is required.
 
 \begin{figure}[!t]
 \centering
@@ -227,9 +261,17 @@ and (vi) a smaller XResNet1D-50 backbone.
 \subsection{Comparison With Published Systems}
 \label{sec:sota}
 
-Table~\ref{tab:sota} places our models alongside published PTB-XL results. We
-draw the comparison carefully. Our encoders do not exceed the strongest
-published classifiers, and we make no claim that they do. The published
+Table~\ref{tab:sota} places our models alongside published PTB-XL results.
+With the normalisation correction of Section~\ref{sec:preproc} in place, our
+Inception1D-MRL model attains \R{IncAUCsmall} macro AUC---above the 0.921
+reported for the same backbone by Strodthoff \etal{} and comparable to the
+strongest published superdiagnostic results.
+
+We note this without resting the contribution on it. The adaptivity remains
+the contribution; the accuracy establishes that the flat
+accuracy--dimension profile holds \emph{at} benchmark-level performance rather
+than only at a lower operating point, which is a stronger version of the claim
+than the previous submission could make. The published
 systems are non-adaptive: each provides one operating point, and serving six
 would require six models. Our contribution is the adaptivity, which is
 obtained at a cost measured in this paper, on encoders that are otherwise

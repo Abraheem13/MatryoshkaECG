@@ -4,6 +4,7 @@ code/data/
 **/*.npz
 **/*.npy
 **/*.pt
+**/*.tgz
 __pycache__/
 *.pyc
 paper/*.aux
@@ -13,3 +14,4 @@ paper/*.bbl
 paper/*.out
 paper/*.fls
 paper/*.fdb_latexmk
+paper/*.synctex.gz

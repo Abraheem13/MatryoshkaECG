@@ -189,7 +189,7 @@ def tab_main(summary):
     lines = [
         "\\begin{table*}[!t]", "\\centering",
         "\\caption{Test-set macro AUC-ROC on PTB-XL fold 10 ($n$=2{,}158), "
-        "mean\\,$\\pm$\\,SD over five training seeds. Fixed-dimension baselines "
+        "mean\\,$\\pm$\\,SD over training seeds. Fixed-dimension baselines "
         "use the \\emph{same} backbone as the corresponding MRL model, which is "
         "the like-for-like comparison. Storage is bytes per stored embedding "
         "(float32).}",
