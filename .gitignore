@@ -1,0 +1,15 @@
+data/
+code/data/
+**/checkpoints/
+**/*.npz
+**/*.npy
+**/*.pt
+__pycache__/
+*.pyc
+paper/*.aux
+paper/*.log
+paper/*.blg
+paper/*.bbl
+paper/*.out
+paper/*.fls
+paper/*.fdb_latexmk

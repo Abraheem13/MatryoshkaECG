@@ -1,0 +1,20 @@
+========================================================================
+  RUN inception1d_mrl_8lead_s0
+  device=cuda  amp=bf16  seed=0
+  leads=8lead  norm=dataset
+========================================================================
+Traceback (most recent call last):
+  File "/home/user/yawarb/MatryoshkaECG/code/scripts/train.py", line 373, in <module>
+    main()
+    ~~~~^^
+  File "/home/user/yawarb/MatryoshkaECG/code/scripts/train.py", line 217, in main
+    dm = ECGDataModule(data_dir=args.data_dir, config=cfg, lead_subset=lead_subset)
+  File "/home/user/yawarb/MatryoshkaECG/code/mecg/data/dataset.py", line 226, in __init__
+    self._norm_stats = (compute_norm_stats(os.path.join(data_dir, "X_train.npy"))
+                        ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/yawarb/MatryoshkaECG/code/mecg/data/dataset.py", line 64, in compute_norm_stats
+    X = np.load(x_train_path, mmap_mode="r")
+  File "/home/user/yawarb/.local/lib/python3.13/site-packages/numpy/lib/_npyio_impl.py", line 454, in load
+    fid = stack.enter_context(open(os.fspath(file), "rb"))
+                              ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data/processed/X_train.npy'

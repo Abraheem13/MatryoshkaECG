@@ -83,8 +83,7 @@ for S in $SEEDS; do
   for D in $DIMS; do
     train "inception1d_fixed_d${D}_s${S}"  "$INC_CFG"  "$S" \
       --head linear --embedding-dim "$D"
-    train "xresnet1d101_fixed_d${D}_s${S}" "$XRES_CFG" "$S" \
-      --head linear --embedding-dim "$D"
+    : # XResNet fixed baselines skipped (see response letter)
   done
 done
 fi
@@ -115,7 +114,7 @@ fi
 # ---------------------------------------------------------------------------
 if stage 5; then
 log "STAGE 5  natively trained reduced-lead models (wearable proxy, R1-1)"
-for L in 8lead 6lead 3lead 2lead lead_I lead_II; do
+for L in lead_I 3lead; do
   for S in $SEEDS; do
     train "inception1d_mrl_${L}_s${S}" "$INC_CFG" "$S" --lead-subset "$L"
   done

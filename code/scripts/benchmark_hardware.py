@@ -267,8 +267,13 @@ def main():
         report["devices"][dev_name] = entry
 
     if not args.skip_onnx:
-        report["onnxruntime_cpu"] = bench_onnx(
-            ECGModel(cfg, verbose=False).eval(), dims, leads=leads, length=length)
+        try:
+            report["onnxruntime_cpu"] = bench_onnx(
+                ECGModel(cfg, verbose=False).eval(), dims,
+                leads=leads, length=length)
+        except Exception as exc:   # onnxscript/onnxruntime optional
+            report["onnxruntime_cpu"] = {"error": f"{type(exc).__name__}: {exc}"}
+            print(f"  ONNX skipped: {exc}")
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     with open(args.out, "w") as f:

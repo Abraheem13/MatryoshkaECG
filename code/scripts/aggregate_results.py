@@ -53,7 +53,12 @@ def load_runs(results_dir):
 
 
 def group_key(r):
-    return (r["backbone"], r["head"], r["lead_subset"],
+    # Condition = run name minus the seed suffix. Grouping on
+    # (backbone, head, leads, dims) alone collapses every ablation into the
+    # main model, because they share all four.
+    import re as _re
+    cond = _re.sub(r"_s\d+$", "", r.get("run_name", "unknown"))
+    return (r["backbone"], r["head"], r["lead_subset"], cond,
             tuple(r["dims"]) if len(r["dims"]) > 1 else ("fixed", r["dims"][0]))
 
 
@@ -77,8 +82,8 @@ def build_summary(runs):
 
     summary = {}
     for key, rs in groups.items():
-        backbone, head, leads, dimtag = key
-        name = f"{backbone}|{head}|{leads}|{dimtag}"
+        backbone, head, leads, cond, dimtag = key
+        name = f"{cond}|{dimtag}"
         per_dim = {}
         dims = rs[0]["dims"]
         for d in dims:
@@ -91,6 +96,7 @@ def build_summary(runs):
                                "seeds": [r["seed"] for r in rs]}
         summary[name] = {
             "backbone": backbone, "head": head, "lead_subset": leads,
+            "condition": cond,
             "dims": dims, "n_seeds": len(rs),
             "n_params": rs[0].get("n_params"),
             "per_dim": per_dim,
@@ -168,10 +174,10 @@ def write_table(path, body):
 def tab_main(summary):
     """Main table: MRL vs same-backbone fixed baselines, mean +/- SD."""
     rows = []
-    inc_mrl = next((k for k in summary if "inception1d|mrl|12lead" in k
-                    and "fixed" not in k), None)
-    xres_mrl = next((k for k in summary if "xresnet1d101|mrl|12lead" in k
-                     and "fixed" not in k), None)
+    inc_mrl = next((k for k, v in summary.items()
+                    if v.get("condition") == "inception1d_mrl"), None)
+    xres_mrl = next((k for k, v in summary.items()
+                     if v.get("condition") == "xresnet1d101_mrl"), None)
 
     def fixed_for(backbone, d):
         for k, v in summary.items():
@@ -480,8 +486,10 @@ def main():
     for k, v in summary.items():
         print(f"    {k}  seeds={v['n_seeds']}")
 
-    inc_key = next((k for k in summary if k.startswith("inception1d|mrl|12lead")), None)
-    xres_key = next((k for k in summary if k.startswith("xresnet1d101|mrl|12lead")), None)
+    inc_key = next((k for k, v in summary.items()
+                    if v.get("condition") == "inception1d_mrl"), None)
+    xres_key = next((k for k, v in summary.items()
+                     if v.get("condition") == "xresnet1d101_mrl"), None)
 
     equiv = within_model_equivalence(summary, inc_key, args.margin) if inc_key else None
     cross = (across_model_tests(summary, inc_key, xres_key)

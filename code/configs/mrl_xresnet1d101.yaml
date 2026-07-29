@@ -31,7 +31,7 @@ training:
   pos_weight: false
   early_stopping_patience: 15
   gradient_clip_norm: 1.0
-  num_workers: 8
+  num_workers: 4
   pin_memory: true
 
 augmentation:

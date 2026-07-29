@@ -1,0 +1,166 @@
+{
+  "checkpoint": "results/checkpoints/inception1d_mrl_s0_best.pt",
+  "dims": [
+    16,
+    32,
+    64,
+    128,
+    256,
+    512
+  ],
+  "modes": {
+    "fp32": {
+      "per_dim": {
+        "16": {
+          "macro_auc": 0.926375555204519,
+          "macro_f1": 0.7381602747016844,
+          "ci_low": 0.919497205413052,
+          "ci_high": 0.933075147965203
+        },
+        "32": {
+          "macro_auc": 0.926066112927559,
+          "macro_f1": 0.7409387336419323,
+          "ci_low": 0.9191484750430835,
+          "ci_high": 0.9329369571311922
+        },
+        "64": {
+          "macro_auc": 0.9260937859362841,
+          "macro_f1": 0.7406176539038756,
+          "ci_low": 0.9191598442384816,
+          "ci_high": 0.9329264482331502
+        },
+        "128": {
+          "macro_auc": 0.9259888238623631,
+          "macro_f1": 0.7388133845498864,
+          "ci_low": 0.9190587242691853,
+          "ci_high": 0.9328380808655288
+        },
+        "256": {
+          "macro_auc": 0.9256977135972267,
+          "macro_f1": 0.7388675244822374,
+          "ci_low": 0.9187647551030952,
+          "ci_high": 0.9324461791267421
+        },
+        "512": {
+          "macro_auc": 0.9250746531760015,
+          "macro_f1": 0.7384983076720542,
+          "ci_low": 0.9182374426992236,
+          "ci_high": 0.9318993013058532
+        }
+      },
+      "size_mb": 18.567348,
+      "latency_ms": 4.506811503233621,
+      "device": "cuda",
+      "amp": null
+    },
+    "dynamic": {
+      "per_dim": {
+        "16": {
+          "macro_auc": 0.9263429404513813,
+          "macro_f1": 0.7403158140740773,
+          "ci_low": 0.9195074682501069,
+          "ci_high": 0.9330732561431875
+        },
+        "32": {
+          "macro_auc": 0.92606182412926,
+          "macro_f1": 0.7414597904588403,
+          "ci_low": 0.9191361035649789,
+          "ci_high": 0.9328735823698369
+        },
+        "64": {
+          "macro_auc": 0.9259806795271543,
+          "macro_f1": 0.7408956854103966,
+          "ci_low": 0.9189619680796997,
+          "ci_high": 0.932817038718169
+        },
+        "128": {
+          "macro_auc": 0.9258404922380719,
+          "macro_f1": 0.7404494406664156,
+          "ci_low": 0.9189054256831577,
+          "ci_high": 0.9326669946787846
+        },
+        "256": {
+          "macro_auc": 0.9257067857947618,
+          "macro_f1": 0.7390348842552047,
+          "ci_low": 0.9187792087512511,
+          "ci_high": 0.9324594058707883
+        },
+        "512": {
+          "macro_auc": 0.9251208989301543,
+          "macro_f1": 0.7361183230153177,
+          "ci_low": 0.9182706440688245,
+          "ci_high": 0.9319645224344889
+        }
+      },
+      "size_mb": 15.68211,
+      "latency_ms": 17.133319001004566,
+      "device": "cpu",
+      "amp": null,
+      "delta_vs_fp32": {
+        "16": -3.261475313764972e-05,
+        "32": -4.2887982990569284e-06,
+        "64": -0.00011310640912975956,
+        "128": -0.00014833162429128688,
+        "256": 9.072197535098248e-06,
+        "512": 4.624575415279608e-05
+      },
+      "small_prefix_penalty": -7.88605072904458e-05
+    },
+    "static": {
+      "error": "NotImplementedError: Could not run 'quantized::conv1d' with arguments from the 'CPU' backend. This could be because the operator doesn't exist for this backend, or was omitted during the selective/custom build process (if using custom build). If you are a Facebook employee using PyTorch on mobile, please visit https://fburl.com/ptmfixes for possible resolutions. 'quantized::conv1d' is only available for these backends: [Meta, QuantizedCPU, QuantizedCUDA, BackendSelect, Python, FuncTorchDynamicLayerBackMode, Functionalize, Named, Conjugate, Negative, ZeroTensor, ADInplaceOrView, AutogradOther, AutogradCPU, AutogradCUDA, AutogradXLA, AutogradMPS, AutogradXPU, AutogradHPU, AutogradLazy, AutogradMTIA, AutogradMAIA, AutogradPrivateUse1, AutogradMeta, Tracer, AutocastCPU, AutocastMTIA, AutocastMAIA, AutocastXPU, AutocastMPS, AutocastCUDA, FuncTorchBatched, BatchedNestedTensor, FuncTorchVmapMode, Batched, VmapMode, FuncTorchGradWrapper, PythonTLSSnapshot, FuncTorchDynamicLayerFrontMode, PreDispatch, PythonDispatcher].\n\nMeta: registered at /pytorch/aten/src/ATen/core/MetaFallbackKernel.cpp:23 [backend fallback]\nQuantizedCPU: registered at /pytorch/aten/src/ATen/native/quantized/cpu/qconv.cpp:2207 [kernel]\nQuantizedCUDA: registered at /pytorch/aten/src/ATen/native/quantized/cudnn/Conv.cpp:386 [kernel]\nBackendSelect: fallthrough registered at /pytorch/aten/src/ATen/core/BackendSelectFallbackKernel.cpp:3 [backend fallback]\nPython: registered at /pytorch/aten/src/ATen/core/PythonFallbackKernel.cpp:198 [backend fallback]\nFuncTorchDynamicLayerBackMode: registered at /pytorch/aten/src/ATen/functorch/DynamicLayer.cpp:477 [backend fallback]\nFunctionalize: registered at /pytorch/aten/src/ATen/FunctionalizeFallbackKernel.cpp:384 [backend fallback]\nNamed: registered at /pytorch/aten/src/ATen/core/NamedRegistrations.cpp:5 [backend fallback]\nConjugate: registered at /pytorch/aten/src/ATen/ConjugateFallback.cpp:17 [backend fallback]\nNegative: registered at /pytorch/aten/src/ATen/native/NegateFallback.cpp:18 [backend fallback]\nZeroTensor: registered at /pytorch/aten/src/ATen/ZeroTensorFallback.cpp:115 [backend fallback]\nADInplaceOrView: fallthrough registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:103 [backend fallback]\nAutogradOther: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:62 [backend fallback]\nAutogradCPU: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:66 [backend fallback]\nAutogradCUDA: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:74 [backend fallback]\nAutogradXLA: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:86 [backend fallback]\nAutogradMPS: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:94 [backend fallback]\nAutogradXPU: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:70 [backend fallback]\nAutogradHPU: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:107 [backend fallback]\nAutogradLazy: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:90 [backend fallback]\nAutogradMTIA: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:78 [backend fallback]\nAutogradMAIA: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:82 [backend fallback]\nAutogradPrivateUse1: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:111 [backend fallback]\nAutogradMeta: registered at /pytorch/aten/src/ATen/core/VariableFallbackKernel.cpp:98 [backend fallback]\nTracer: registered at /pytorch/torch/csrc/autograd/TraceTypeManual.cpp:296 [backend fallback]\nAutocastCPU: fallthrough registered at /pytorch/aten/src/ATen/autocast_mode.cpp:336 [backend fallback]\nAutocastMTIA: fallthrough registered at /pytorch/aten/src/ATen/autocast_mode.cpp:480 [backend fallback]\nAutocastMAIA: fallthrough registered at /pytorch/aten/src/ATen/autocast_mode.cpp:518 [backend fallback]\nAutocastXPU: fallthrough registered at /pytorch/aten/src/ATen/autocast_mode.cpp:556 [backend fallback]\nAutocastMPS: fallthrough registered at /pytorch/aten/src/ATen/autocast_mode.cpp:221 [backend fallback]\nAutocastCUDA: fallthrough registered at /pytorch/aten/src/ATen/autocast_mode.cpp:177 [backend fallback]\nFuncTorchBatched: registered at /pytorch/aten/src/ATen/functorch/LegacyBatchingRegistrations.cpp:727 [backend fallback]\nBatchedNestedTensor: registered at /pytorch/aten/src/ATen/functorch/LegacyBatchingRegistrations.cpp:754 [backend fallback]\nFuncTorchVmapMode: fallthrough registered at /pytorch/aten/src/ATen/functorch/VmapModeRegistrations.cpp:22 [backend fallback]\nBatched: registered at /pytorch/aten/src/ATen/LegacyBatchingRegistrations.cpp:1072 [backend fallback]\nVmapMode: fallthrough registered at /pytorch/aten/src/ATen/VmapModeRegistrations.cpp:32 [backend fallback]\nFuncTorchGradWrapper: registered at /pytorch/aten/src/ATen/functorch/TensorWrapper.cpp:210 [backend fallback]\nPythonTLSSnapshot: registered at /pytorch/aten/src/ATen/core/PythonFallbackKernel.cpp:206 [backend fallback]\nFuncTorchDynamicLayerFrontMode: registered at /pytorch/aten/src/ATen/functorch/DynamicLayer.cpp:473 [backend fallback]\nPreDispatch: registered at /pytorch/aten/src/ATen/core/PythonFallbackKernel.cpp:210 [backend fallback]\nPythonDispatcher: registered at /pytorch/aten/src/ATen/core/PythonFallbackKernel.cpp:202 [backend fallback]\n"
+    },
+    "fp16": {
+      "per_dim": {
+        "16": {
+          "macro_auc": 0.9263767991694898,
+          "macro_f1": 0.7381602747016844,
+          "ci_low": 0.9195076493358089,
+          "ci_high": 0.9330714631113303
+        },
+        "32": {
+          "macro_auc": 0.9260624855380136,
+          "macro_f1": 0.7410200930539604,
+          "ci_low": 0.9191429667097815,
+          "ci_high": 0.9329336415252539
+        },
+        "64": {
+          "macro_auc": 0.9260902976244537,
+          "macro_f1": 0.7406176539038756,
+          "ci_low": 0.9191531510369428,
+          "ci_high": 0.9329268822577489
+        },
+        "128": {
+          "macro_auc": 0.9259878282868707,
+          "macro_f1": 0.740208727247109,
+          "ci_low": 0.9190573804070595,
+          "ci_high": 0.9328390229341832
+        },
+        "256": {
+          "macro_auc": 0.9256988542563966,
+          "macro_f1": 0.7388675244822374,
+          "ci_low": 0.9187692361138777,
+          "ci_high": 0.9324521902866967
+        },
+        "512": {
+          "macro_auc": 0.9250694807281834,
+          "macro_f1": 0.7382830605106993,
+          "ci_low": 0.9182385003195662,
+          "ci_high": 0.9319005689552724
+        }
+      },
+      "size_mb": 18.567348,
+      "latency_ms": 4.558521497529,
+      "device": "cuda",
+      "amp": "torch.float16",
+      "delta_vs_fp32": {
+        "16": 1.2439649708095857e-06,
+        "32": -3.6273895454019822e-06,
+        "64": -3.488311830390778e-06,
+        "128": -9.955754924906302e-07,
+        "256": 1.140659169895919e-06,
+        "512": -5.172447818058146e-06
+      },
+      "small_prefix_penalty": 6.416412788867731e-06
+    }
+  }
+}
