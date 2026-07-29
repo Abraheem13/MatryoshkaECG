@@ -177,6 +177,258 @@
         "results/runs/inception1d_constant_s0"
       ]
     },
+    "inception1d_fixed_d128|('fixed', 128)": {
+      "backbone": "inception1d",
+      "head": "linear",
+      "lead_subset": "12lead",
+      "condition": "inception1d_fixed_d128",
+      "dims": [
+        128
+      ],
+      "n_seeds": 1,
+      "n_params": 4196229,
+      "per_dim": {
+        "128": {
+          "auc": {
+            "mean": 0.9247159309723256,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.9247159309723256,
+            "ci_high": 0.9247159309723256
+          },
+          "f1": {
+            "mean": 0.7431204231391806,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.7431204231391806,
+            "ci_high": 0.7431204231391806
+          },
+          "ap": {
+            "mean": 0.8220714962866419,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.8220714962866419,
+            "ci_high": 0.8220714962866419
+          },
+          "seeds": [
+            0
+          ]
+        }
+      },
+      "run_dirs": [
+        "results/runs/inception1d_fixed_d128_s0"
+      ]
+    },
+    "inception1d_fixed_d16|('fixed', 16)": {
+      "backbone": "inception1d",
+      "head": "linear",
+      "lead_subset": "12lead",
+      "condition": "inception1d_fixed_d16",
+      "dims": [
+        16
+      ],
+      "n_seeds": 1,
+      "n_params": 4080645,
+      "per_dim": {
+        "16": {
+          "auc": {
+            "mean": 0.9264345454282623,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.9264345454282623,
+            "ci_high": 0.9264345454282623
+          },
+          "f1": {
+            "mean": 0.7469452963834654,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.7469452963834654,
+            "ci_high": 0.7469452963834654
+          },
+          "ap": {
+            "mean": 0.8214317236670045,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.8214317236670045,
+            "ci_high": 0.8214317236670045
+          },
+          "seeds": [
+            0
+          ]
+        }
+      },
+      "run_dirs": [
+        "results/runs/inception1d_fixed_d16_s0"
+      ]
+    },
+    "inception1d_fixed_d256|('fixed', 256)": {
+      "backbone": "inception1d",
+      "head": "linear",
+      "lead_subset": "12lead",
+      "condition": "inception1d_fixed_d256",
+      "dims": [
+        256
+      ],
+      "n_seeds": 1,
+      "n_params": 4328325,
+      "per_dim": {
+        "256": {
+          "auc": {
+            "mean": 0.9240510138055115,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.9240510138055115,
+            "ci_high": 0.9240510138055115
+          },
+          "f1": {
+            "mean": 0.7374787328549359,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.7374787328549359,
+            "ci_high": 0.7374787328549359
+          },
+          "ap": {
+            "mean": 0.8127006830981512,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.8127006830981512,
+            "ci_high": 0.8127006830981512
+          },
+          "seeds": [
+            0
+          ]
+        }
+      },
+      "run_dirs": [
+        "results/runs/inception1d_fixed_d256_s0"
+      ]
+    },
+    "inception1d_fixed_d32|('fixed', 32)": {
+      "backbone": "inception1d",
+      "head": "linear",
+      "lead_subset": "12lead",
+      "condition": "inception1d_fixed_d32",
+      "dims": [
+        32
+      ],
+      "n_seeds": 1,
+      "n_params": 4097157,
+      "per_dim": {
+        "32": {
+          "auc": {
+            "mean": 0.9241334750920382,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.9241334750920382,
+            "ci_high": 0.9241334750920382
+          },
+          "f1": {
+            "mean": 0.7390560505627768,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.7390560505627768,
+            "ci_high": 0.7390560505627768
+          },
+          "ap": {
+            "mean": 0.8190850751237783,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.8190850751237783,
+            "ci_high": 0.8190850751237783
+          },
+          "seeds": [
+            0
+          ]
+        }
+      },
+      "run_dirs": [
+        "results/runs/inception1d_fixed_d32_s0"
+      ]
+    },
+    "inception1d_fixed_d512|('fixed', 512)": {
+      "backbone": "inception1d",
+      "head": "linear",
+      "lead_subset": "12lead",
+      "condition": "inception1d_fixed_d512",
+      "dims": [
+        512
+      ],
+      "n_seeds": 1,
+      "n_params": 4592517,
+      "per_dim": {
+        "512": {
+          "auc": {
+            "mean": 0.9268187016999383,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.9268187016999383,
+            "ci_high": 0.9268187016999383
+          },
+          "f1": {
+            "mean": 0.7501118072985753,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.7501118072985753,
+            "ci_high": 0.7501118072985753
+          },
+          "ap": {
+            "mean": 0.8232555511484977,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.8232555511484977,
+            "ci_high": 0.8232555511484977
+          },
+          "seeds": [
+            0
+          ]
+        }
+      },
+      "run_dirs": [
+        "results/runs/inception1d_fixed_d512_s0"
+      ]
+    },
+    "inception1d_fixed_d64|('fixed', 64)": {
+      "backbone": "inception1d",
+      "head": "linear",
+      "lead_subset": "12lead",
+      "condition": "inception1d_fixed_d64",
+      "dims": [
+        64
+      ],
+      "n_seeds": 1,
+      "n_params": 4130181,
+      "per_dim": {
+        "64": {
+          "auc": {
+            "mean": 0.9237799179390642,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.9237799179390642,
+            "ci_high": 0.9237799179390642
+          },
+          "f1": {
+            "mean": 0.7406583655238067,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.7406583655238067,
+            "ci_high": 0.7406583655238067
+          },
+          "ap": {
+            "mean": 0.8180211617783965,
+            "std": 0.0,
+            "n": 1,
+            "ci_low": 0.8180211617783965,
+            "ci_high": 0.8180211617783965
+          },
+          "seeds": [
+            0
+          ]
+        }
+      },
+      "run_dirs": [
+        "results/runs/inception1d_fixed_d64_s0"
+      ]
+    },
     "inception1d_mrl_3lead|(16, 32, 64, 128, 256, 512)": {
       "backbone": "inception1d",
       "head": "mrl",
@@ -2220,5 +2472,5 @@
       "significant": true
     }
   },
-  "n_runs": 16
+  "n_runs": 22
 }
